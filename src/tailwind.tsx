@@ -27,16 +27,38 @@ export const mergeArrays = (template: TemplateStringsArray, templateElements: (s
 }
 
 export const cleanTemplate = (template: Array<Interpolation<any>>, inheritedClasses: string = "") => {
-    const newClasses: string[] = template
-        .join(" ")
-        .trim()
-        .replace(/\n/g, " ") // replace newline with space
-        .replace(/\s{2,}/g, " ") // replace line return by space
-        .split(" ")
-        .filter((c) => c !== ",") // remove comma introduced by template to string
+    let newClasses: string[] = []
+    const isApplyRule =
+        template
+            .join("")
+            .replace(/\s{2,}/gi, "")
+            .trim()
+            .indexOf("@apply") > -1
+
+    if (isApplyRule) {
+        newClasses = [
+            ...template
+                .join(" ")
+                .replace("@apply", "")
+                .trim()
+                .replace(/\s{2,}/g, " ") // replace line return by space
+                .split(" ")
+                .filter((c) => c !== ",")
+        ]
+    } else {
+        newClasses = [
+            ...template
+                .join(" ")
+                .trim()
+                .replace(/\n/g, " ") // replace newline with space
+                .replace(/\s{2,}/g, " ") // replace line return by space
+                .split(" ")
+                .filter((c) => c !== ",")
+        ] // remove comma introduced by template to string
+    }
 
     const inheritedClassesArray: string[] = inheritedClasses ? inheritedClasses.split(" ") : []
-
+    
     return twMerge(
         ...newClasses
             .concat(inheritedClassesArray) // add new classes to inherited classes
@@ -64,7 +86,7 @@ type MergeProps<O extends object, P extends {} = {}> =
 // RemoveIndex<P> is used to make React.ComponentPropsWithRef typesafe on Tailwind components, delete if causing issues
 
 type TailwindPropHelper<
-    P,
+    P extends object = {},
     O extends object = {}
     // PickU is needed here to make $as typing work
 > = PickU<MergeProps<O, P>, keyof MergeProps<O, P>>
@@ -73,7 +95,7 @@ type TailwindComponentPropsWith$As<
     P extends object,
     O extends object,
     $As extends string | React.ComponentType<any> = React.ComponentType<P>,
-    P2 = $As extends AnyTailwindComponent
+    P2 extends object = $As extends AnyTailwindComponent
         ? TailwindComponentAllInnerProps<$As>
         : $As extends IntrinsicElementsKeys | React.ComponentType<any>
         ? React.ComponentPropsWithRef<$As>

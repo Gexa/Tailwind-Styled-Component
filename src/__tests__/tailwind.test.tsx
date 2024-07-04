@@ -39,6 +39,15 @@ describe("cleanTemplate", () => {
 
         expect(result).toEqual("fixed h-full w-full bg-green-500")
     })
+
+    it("should return a class string when @apply rules with messed string", () => {
+        const template = [
+            `@apply fixed h-full   w-full    bg-green-500           `
+        ]
+        const result = cleanTemplate(template)
+
+        expect(result).toEqual("fixed h-full w-full bg-green-500")
+    })
 })
 
 describe("tw", () => {
@@ -136,8 +145,7 @@ describe("tw", () => {
     })
     it("matches snapshot with three properties including `withStyle`", () => {
         const Div = tw.div<{ $test1?: string; $test2?: string }>`
-      bg-gray-500
-      p-10
+      @apply bg-gray-500 p-10
       `.withStyle<{ $bgColor: string }>((p) => ({ backgroundColor: p.$bgColor }))
 
         const { asFragment } = render(
@@ -167,13 +175,14 @@ describe("tw", () => {
     it("ignores undefined as return value", () => {
         const Div = tw.div<{ $test1?: string }>`
       ${(p) => (p.$test1 === "true" ? `bg-gray-500` : undefined)}
-      p-10
+      @apply z-10
       `
 
         const { getByText } = render(<Div $test1="false">test</Div>)
 
         const element = getByText("test")
-        expect(element).toHaveClass("p-10", { exact: true })
+
+        expect(element).toHaveClass("z-10", { exact: true })
     })
 
     it("ignores null as return value", () => {
